@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 from rag_repl.facade import AskResponse, Chunk, SearchResponse
 from rag_repl.stub_backend import StubRagBackend
@@ -40,6 +41,18 @@ class StubRagBackendTests(unittest.TestCase):
         self.assertEqual(response.model_used, "stub-model")
         self.assertEqual(len(response.sources), 1)
         self.assertIsInstance(response.sources[0], Chunk)
+
+    def test_ask_waits_three_seconds_for_loader_demo(self) -> None:
+        with patch("time.sleep") as sleep:
+            self.backend.ask(
+                question="How does retry work?",
+                mode="explain",
+                limit=1,
+                filters={},
+                client_name="manual_user",
+            )
+
+        sleep.assert_called_once_with(3)
 
 
 if __name__ == "__main__":
