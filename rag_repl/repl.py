@@ -7,6 +7,7 @@ from typing import TextIO
 from rag_repl.facade import RagBackend
 from rag_repl.render import render_ask, render_search, render_stats
 from rag_repl.state import SessionState
+from rag_repl.terminal import LoadingIndicator
 
 
 ASK_MODES = frozenset({"search", "explain", "generate", "analyze"})
@@ -96,16 +97,15 @@ class Repl:
         )
 
     def _ask(self, question: str) -> None:
-        render_ask(
-            self._backend.ask(
+        with LoadingIndicator(self._output):
+            response = self._backend.ask(
                 question=question,
                 mode=self.state.ask_mode,
                 limit=self.state.limit,
                 filters=self.state.api_filters(),
                 client_name=CLIENT_NAME,
-            ),
-            self._output,
-        )
+            )
+        render_ask(response, self._output)
 
     def _set_ask_mode(self, mode: str) -> None:
         if mode not in ASK_MODES:

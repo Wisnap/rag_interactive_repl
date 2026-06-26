@@ -1,0 +1,38 @@
+<h2>Оформление ответа на <code>/ask</code></h2>
+<p class="subtitle">Оба варианта добавляют индикатор ожидания до прихода ответа.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#101827;color:#e5e7eb;font-family:ui-monospace,monospace;text-align:left;line-height:1.55">
+      <div style="color:#60a5fa;font-weight:700">ANSWER</div>
+      <div style="margin:7px 0 13px">Краткий ответ с объяснением.</div>
+      <div style="color:#fbbf24;font-weight:700">MODEL</div>
+      <div style="margin:7px 0 13px">gpt-4.1</div>
+      <div style="color:#34d399;font-weight:700">SOURCES</div>
+      <div style="margin-top:7px;color:#d1fae5">[1] docs/api.py:10-22 score=0.920</div>
+    </div>
+    <div class="card-body">
+      <h3>A · Цветные заголовки секций</h3>
+      <p>Ответ остаётся обычным текстом; цвета выделяют только Answer, Model и Sources. Самый спокойный и совместимый вариант для терминала.</p>
+    </div>
+  </div>
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:18px;background:#101827;font-family:ui-monospace,monospace;text-align:left;line-height:1.55">
+      <div style="border-left:3px solid #60a5fa;padding-left:9px;color:#dbeafe"><b style="color:#60a5fa">ANSWER</b><br>Краткий ответ с объяснением.</div>
+      <div style="height:12px"></div>
+      <div style="border-left:3px solid #fbbf24;padding-left:9px;color:#fef3c7"><b style="color:#fbbf24">MODEL</b><br>gpt-4.1</div>
+      <div style="height:12px"></div>
+      <div style="border-left:3px solid #34d399;padding-left:9px;color:#d1fae5"><b style="color:#34d399">SOURCES</b><br>[1] docs/api.py:10-22 score=0.920</div>
+    </div>
+    <div class="card-body">
+      <h3>B · Цветные секции с маркером</h3>
+      <p>Те же цвета, плюс цветная вертикальная граница на содержимом. Выразительнее, но вывод становится визуально плотнее.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Ожидание ответа</div>
+  <div class="mockup"><div class="mockup-body" style="font-family:ui-monospace,monospace"><span style="color:#60a5fa">⠋</span> Формирую ответ…</div></div>
+  <p class="subtitle">Анимированный спиннер выводится сразу перед запросом и очищается при успехе или ошибке, чтобы не оставлять лишнюю строку в истории.</p>
+</div>

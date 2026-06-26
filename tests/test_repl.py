@@ -28,6 +28,25 @@ def _chunk() -> Chunk:
     return Chunk("id", "src/test.py", 1, 2, "code", "unit", "content", 0.9)
 
 
+class TtyBuffer(io.StringIO):
+    def isatty(self) -> bool:
+        return True
+
+
+class InspectingBackend(RecordingBackend):
+    def __init__(self, output: io.StringIO, fail: bool = False) -> None:
+        super().__init__()
+        self.output = output
+        self.fail = fail
+        self.output_during_ask = ""
+
+    def ask(self, **kwargs: object) -> AskResponse:
+        self.output_during_ask = self.output.getvalue()
+        if self.fail:
+            raise RuntimeError("backend failed")
+        return super().ask(**kwargs)
+
+
 class ReplTests(unittest.TestCase):
     def setUp(self) -> None:
         self.output = io.StringIO()
@@ -64,6 +83,27 @@ class ReplTests(unittest.TestCase):
         self.assertEqual(operation, "ask")
         self.assertEqual(arguments["mode"], "explain")
         self.assertEqual(arguments["client_name"], "manual_user")
+
+    def test_ask_shows_loader_before_request_and_clears_it_after_success(self) -> None:
+        output = TtyBuffer()
+        backend = InspectingBackend(output)
+        repl = Repl(backend, output=output)
+
+        repl.handle_line("/ask What is this module?")
+
+        self.assertIn("\r⠋ Формирую ответ…", backend.output_during_ask)
+        self.assertIn("\r\033[2K", output.getvalue())
+        self.assertLess(output.getvalue().index("\r\033[2K"), output.getvalue().index("MODEL"))
+
+    def test_ask_clears_loader_after_backend_error(self) -> None:
+        output = TtyBuffer()
+        backend = InspectingBackend(output, fail=True)
+        repl = Repl(backend, output=output)
+
+        repl.handle_line("/ask What is this module?")
+
+        self.assertIn("\r⠋ Формирую ответ…", backend.output_during_ask)
+        self.assertIn("\r\033[2KError: backend failed\n", output.getvalue())
 
     def test_invalid_command_does_not_change_session_state(self) -> None:
         self.repl.handle_line("/mode explain")

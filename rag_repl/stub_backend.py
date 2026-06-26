@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from rag_repl.facade import AskResponse, Chunk, Filters, SearchResponse, StatsResponse
@@ -32,6 +33,7 @@ class StubRagBackend:
         filters: Filters,
         client_name: str,
     ) -> AskResponse:
+        time.sleep(3)
         sources = [self._chunk(index, question, mode, filters) for index in range(1, limit + 1)]
         return AskResponse(
             answer=f"Stub answer in {mode} mode for: {question}",
