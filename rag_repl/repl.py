@@ -12,16 +12,23 @@ from rag_repl.terminal import LoadingIndicator
 
 ASK_MODES = frozenset({"search", "explain", "generate", "analyze"})
 CLIENT_NAME = "manual_user"
+HEADER = """░▄▀█░▀█▀░█▀█░░░█▀▀░█▀█░█▀▄░█▀▀░░░█▀█░▄▀█░█▀▀
+░█▀█░░█░░█▀▀░░░█▄▄░█▄█░█▄▀░██▄░░░█▀▄░█▀█░█▄█"""
 
 
 class Repl:
-    def __init__(self, backend: RagBackend, output: TextIO | None = None) -> None:
+    def __init__(
+        self, backend: RagBackend, output: TextIO | None = None, api_url: str | None = None
+    ) -> None:
         self._backend = backend
         self._output = output or sys.stdout
+        self._api_url = api_url
         self.state = SessionState()
 
     def run(self, input_fn: Callable[[str], str] = input) -> None:
-        print("RAG REPL. Type /help for commands.", file=self._output)
+        print(HEADER, file=self._output)
+        print(f"API URL: {self._api_url or 'local stub'}", file=self._output)
+        self._help()
         while True:
             try:
                 line = input_fn("rag> ")
@@ -37,8 +44,7 @@ class Repl:
             return True
         try:
             if not text.startswith("/"):
-                self._search(text)
-                return True
+                raise ValueError("Use /search <text> to search")
             command, _, argument = text.partition(" ")
             argument = argument.strip()
             return self._command(command, argument)
@@ -60,6 +66,10 @@ class Repl:
             if not argument:
                 raise ValueError("/ask requires a question")
             self._ask(argument)
+        elif command == "/search":
+            if not argument:
+                raise ValueError("/search requires a query")
+            self._search(argument)
         elif command == "/mode":
             self._set_ask_mode(argument)
         elif command == "/search-mode":
@@ -136,7 +146,7 @@ class Repl:
     def _help(self) -> None:
         print(
             """Commands:
-  <text>                       Search using the current search mode
+  /search <text>               Search using the current search mode
   /ask <text>                  Ask a question using the current ask mode
   /mode <search|explain|generate|analyze>
   /search-mode <value>         Set API search_mode (for example: hybrid)

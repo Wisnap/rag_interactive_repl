@@ -13,7 +13,8 @@ def main(argv: list[str] | None = None) -> int:
         help="RAG API base URL; defaults to RAG_API_URL or the local stub backend",
     )
     arguments = parser.parse_args(argv)
-    Repl(build_backend(resolve_api_url(arguments.api_url))).run()
+    api_url = resolve_api_url(arguments.api_url)
+    Repl(build_backend(api_url), api_url=api_url).run()
     return 0
 
 
