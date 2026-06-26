@@ -4,7 +4,7 @@ import io
 import unittest
 
 from rag_repl.facade import AskResponse, Chunk, SearchResponse, StatsResponse
-from rag_repl.repl import Repl
+from rag_repl.repl import HEADER, Repl
 
 
 class RecordingBackend:
@@ -58,7 +58,7 @@ class ReplTests(unittest.TestCase):
         self.repl.handle_line("/limit 2")
         self.repl.handle_line("/filter file_category=helper")
 
-        should_continue = self.repl.handle_line("find helpers")
+        should_continue = self.repl.handle_line("/search find helpers")
 
         self.assertTrue(should_continue)
         operation, arguments = self.backend.calls[-1]
@@ -117,17 +117,40 @@ class ReplTests(unittest.TestCase):
     def test_filter_replaces_previous_value_and_nofilter_clears_it(self) -> None:
         self.repl.handle_line("/filter file_category=helper")
         self.repl.handle_line("/filter file_category=service")
-        self.repl.handle_line("query")
+        self.repl.handle_line("/search query")
 
         self.assertEqual(
             self.backend.calls[-1][1]["filters"], {"file_category": {"eq": "service"}}
         )
         self.repl.handle_line("/nofilter")
-        self.repl.handle_line("query")
+        self.repl.handle_line("/search query")
         self.assertEqual(self.backend.calls[-1][1]["filters"], {})
 
     def test_quit_stops_processing(self) -> None:
         self.assertFalse(self.repl.handle_line("/quit"))
+
+    def test_text_without_a_command_does_not_start_a_search(self) -> None:
+        self.repl.handle_line("find helpers")
+
+        self.assertEqual(self.backend.calls, [])
+        self.assertIn("Use /search <text>", self.output.getvalue())
+
+    def test_run_shows_header_and_active_api_url(self) -> None:
+        output = io.StringIO()
+        repl = Repl(self.backend, output=output, api_url="http://rag.example")
+
+        repl.run(lambda _: "/quit")
+
+        self.assertIn("█▀█", output.getvalue())
+        self.assertNotIn("+-----------------------------+", output.getvalue())
+        self.assertEqual(len(HEADER.splitlines()), 2)
+        self.assertIn("API URL: http://rag.example", output.getvalue())
+        self.assertIn("Commands:", output.getvalue())
+
+    def test_run_identifies_the_local_stub_when_api_url_is_not_set(self) -> None:
+        self.repl.run(lambda _: "/quit")
+
+        self.assertIn("API URL: local stub", self.output.getvalue())
 
 
 if __name__ == "__main__":
